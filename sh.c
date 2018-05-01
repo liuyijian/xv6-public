@@ -159,8 +159,6 @@ int
 getcmd(char *buf, int nbuf)
 {
   int i, j;
-  //char buf0[nbuf];
-  // printcwd(currentpath);
   printf(2, "$ ");
   memset(buf, 0, nbuf);
   char c;
@@ -232,12 +230,17 @@ main(void)
 
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
-    addHistory(&hs, buf);
-    passHistory(&hs);
-    setHistory(buf);
+    if (buf[0] == '!' && buf[1] == '!')
+    {
+      strcpy(buf, hs.record[(hs.lastcmd - 1) % H_NUMBER]);
+    } else {
+      addHistory(&hs, buf);
+      passHistory(&hs);
+      setHistory(buf);
+    }
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
-      buf[strlen(buf)-1] = 0;  // chop \n
+      buf[strlen(buf)] = 0;  // chop \n
       if(chdir(buf+3) < 0)
         printf(2, "cannot cd %s\n", buf+3);
       continue;
