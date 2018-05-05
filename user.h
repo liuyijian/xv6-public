@@ -28,6 +28,7 @@ int setconsole(int, int, int, int, int);
 int passHistory(void*);
 void clearc(void);
 void insertc(int c);
+int shutdown(void);
 
 // ulib.c
 int stat(char*, struct stat*);

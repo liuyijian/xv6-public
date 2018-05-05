@@ -108,6 +108,7 @@ extern int sys_setconsole(void);
 extern int sys_passHistory(void);
 extern int sys_clearc(void);
 extern int sys_insertc(void);
+extern int sys_shutdown(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -136,6 +137,7 @@ static int (*syscalls[])(void) = {
 [SYS_passHistory]   sys_passHistory,
 [SYS_clearc]        sys_clearc,
 [SYS_insertc]       sys_insertc,
+[SYS_shutdown]    sys_shutdown,
 };
 
 void

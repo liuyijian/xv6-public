@@ -25,3 +25,4 @@
 #define SYS_clearc      23
 #define SYS_insertc     24
 #define SYS_setconsole  25
+#define SYS_shutdown    26
