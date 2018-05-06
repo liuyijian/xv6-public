@@ -186,6 +186,7 @@ UPROGS=\
 	_splice\
 	_history\
 	_shutdown\
+	_login\
 
 
 fs.img: mkfs README $(UPROGS)
