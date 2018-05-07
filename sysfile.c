@@ -499,3 +499,49 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+//操作文件读取位置
+int sys_lseek(void) {
+	int fd;
+	int offset;
+	int base;
+	int newoff = 0;
+	int zerosize, i;
+	char *zeroed, *z;
+
+	struct file *f;
+
+	if ((argfd(0, &fd, &f)<0) ||
+		(argint(1, &offset)<0) || (argint(2, &base)<0))
+			return 0;
+
+	if( base == SEEK_SET) {
+		newoff = offset;
+	}
+
+	if (base == SEEK_CUR)
+		newoff = f->off + offset;
+
+	if (base == SEEK_END)
+		newoff = f->ip->size + offset;
+
+	if (newoff < 0)
+		return 0;
+
+	if (newoff > f->ip->size){
+		zerosize = newoff - f->ip->size;
+		zeroed = kalloc();
+		z = zeroed;
+		for (i = 0; i < PGSIZE; i++)
+			*z++ = 0;
+		while (zerosize > 0){
+			filewrite(f, zeroed, zerosize);
+			zerosize -= PGSIZE;
+		}
+		kfree(zeroed);
+	}
+
+	f->off = newoff;
+	return newoff;
+}
+

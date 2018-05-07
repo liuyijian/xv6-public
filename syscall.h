@@ -26,3 +26,5 @@
 #define SYS_insertc     24
 #define SYS_setconsole  25
 #define SYS_shutdown    26
+#define SYS_lseek  	27
+
