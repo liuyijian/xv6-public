@@ -25,7 +25,6 @@ int sleep(int);
 int uptime(void);
 
 int setconsole(int, int, int, int, int);
-int passHistory(void*);
 void clearc(void);
 void insertc(int c);
 int shutdown(void);

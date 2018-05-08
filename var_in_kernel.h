@@ -3,7 +3,6 @@
 
 #include "history.h"
 
-extern struct history hs;
 extern int consolemode;
 
 

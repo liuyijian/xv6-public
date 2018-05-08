@@ -218,7 +218,6 @@ main(void)
   int fd;
   initHistory(&hs);
   getHistory(&hs);
-  passHistory(&hs);
 
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
@@ -235,7 +234,6 @@ main(void)
       strcpy(buf, hs.record[(hs.lastcmd - 1) % H_NUMBER]);
     } else {
       addHistory(&hs, buf);
-      passHistory(&hs);
       setHistory(buf);
     }
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
