@@ -12,7 +12,7 @@ char* getFnameFromPath(char* path,char* fname)
 	{
 		for(j = i; j  < len; j++)
 		{
-			if((path[j] == '.')  ||  (path[j] == '/'))
+			if((j == 0 && path[j] == '.')  ||  (path[j] == '/'))
 			{
 				break;
 			}
