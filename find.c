@@ -12,7 +12,7 @@ char* getFnameFromPath(char* path,char* fname)
 	{
 		for(j = i; j  < len; j++)
 		{
-			if((path[j] == '.')  ||  (path[j] == '/'))
+			if((j == 0 && path[j] == '.')  ||  (path[j] == '/'))
 			{
 				break;
 			}
@@ -153,7 +153,7 @@ void sf(char *path, char *fname)
 			char name[100];
 			if(compare(getFnameFromPath(path,name),fname) == 0)
 			{
-				printf(1, "%s path:%s  size:%d\n", fname, path,st.size);
+				printf(1, "%s path:%s  size:%d  time:%d\n", fname, path,st.size,st.ctime);
 			}
 			//printf(1,"%s %d %d", getFnameFromPath(path,name), compare(getFnameFromPath(path,name),"."), compare(getFnameFromPath(path,name),".."));
 			//printf(0,"1/n");
@@ -187,7 +187,7 @@ void sf(char *path, char *fname)
 			char name[100];
 			if(compare(getFnameFromPath(buf,name),fname) == 0)
 			{
-				printf(1,"%s path:%s  size:%d\n", fname, buf, st.size);
+				printf(1,"%s path:%s  size:%d  time:%d\n", fname, buf, st.size,st.ctime);
 			}
 			if((st.type == 1) && (compare(getFnameFromPath(buf,name),".") != 0) && (compare(getFnameFromPath(buf,name),"..") != 0))
 			{
@@ -210,7 +210,6 @@ int main(int argc, char *argv[])
 	if(argc < 2)
 	{
 		printf(1, "please input the filename you want to find...\n");
-
 		exit();
 	}
 	/*int i;
