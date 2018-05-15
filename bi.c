@@ -1,3 +1,10 @@
+/*
+*文件功能：BASIC解释器
+*历史来源：五字班方案二代码
+*整合作者：赵哲晖
+*整合时间：2018/05/09
+*/
+
 // A mini BASIC interpreter
 // Statements: LET INPUT PRINT FOR(ENDFOR) IF-ELSE(ENDIF)
 // Basic algebraic operation and logical operation
@@ -20,6 +27,8 @@ ELSE
     PRINT "NO\n"
 ENDIF
 */
+
+
 
 
 #include "types.h"
