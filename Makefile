@@ -177,7 +177,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_Sfile\
+	_find\
 	_bi\
 	_vim\
 	_mv\
