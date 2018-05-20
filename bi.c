@@ -1,3 +1,10 @@
+/*
+*文件功能：BASIC解释器
+*历史来源：五字班方案二代码
+*整合作者：赵哲晖
+*整合时间：2018/05/09
+*/
+
 // A mini BASIC interpreter
 // Statements: LET INPUT PRINT FOR(ENDFOR) IF-ELSE(ENDIF)
 // Basic algebraic operation and logical operation
@@ -20,6 +27,8 @@ ELSE
     PRINT "NO\n"
 ENDIF
 */
+
+
 
 
 #include "types.h"
@@ -126,7 +135,9 @@ typedef enum
     key_endfor,        
     key_if,            
     key_else,       
-    key_endif       
+    key_endif,   
+    key_list,
+    key_goto    
 }keywords;
 
 struct 
@@ -173,6 +184,8 @@ void exec_else(STRING);
 void exec_endif(STRING);
 void exec_let(STRING);
 void exec_null(STRING);
+void exec_list(STRING);
+void exec_goto(STRING);
 
 // load
 int isspace(char);
@@ -185,6 +198,7 @@ char* _strcat(char*, char*);
 int stricmp(char*, char*, int);
 int readline(int, char*);
 void load_program(char*);
+void readCodeFromShell();
 
 PTLIST 
 stack_ini()
@@ -401,7 +415,6 @@ next_token()
         }
         e++;
     }
-    
     return token;
 }
 
@@ -766,6 +779,14 @@ yacc(STRING line)
     {
         return key_let;
     }
+    else if(!stricmp(line, "LIST", 4))
+    {
+        return key_list;
+    }
+    else if(!stricmp(line, "GOTO ", 5))
+    {
+        return key_goto;
+    }
     else if(*line == '\0')
     {
         return key_null;
@@ -1076,6 +1097,46 @@ exec_let(STRING line)
     }
 }
 
+/*
+*函数功能：实现LIST命令，输出前面的代码
+*作者：赵哲晖
+*时间：2018/05/20
+*/
+void exec_list(STRING line)
+{
+    for(int i = 0; i < cp; i++)
+        printf(1,"%s\n",code[i].line);
+    return;
+}
+
+/*
+*函数功能：实现GOTO命令
+*作者：赵哲晖
+*时间：2018/05/20
+*/
+void exec_goto(STRING line)
+{
+    char * s = line;
+    s += 4;
+    while(*s && isspace(*s)) s++;
+    if(!isdigit(*s))
+    {
+        printf(1, "grammar error:goto\n");
+        exit();
+    }
+    int gotoln = atoi(s);
+    if(gotoln > code_size)
+    {
+        printf(1, "line number out of range\n");
+        exit();
+    }
+    else
+    {
+        cp = gotoln - 2;
+    }
+    return;
+}
+
 void
 exec_null(STRING line)
 {  
@@ -1248,6 +1309,43 @@ load_program(STRING filename)
     cp = 0;
 }
 
+/*
+*函数功能：从shell读入代码
+*作者：赵哲晖
+*时间：2018/05/20
+*/
+void readCodeFromShell()
+{
+    cp = 0;
+    while(1)
+    {
+        gets(code[cp].line,128);
+        int bg,ed;
+        for(bg = 0; !isalpha(code[cp].line[bg]) && !isdigit(code[cp].line[bg]); bg++) ;
+        ed = (int)strlen(code[cp].line + bg) - 1;
+        while(ed >= 0 && isspace(code[cp].line[bg + ed]))
+        {
+            ed--;
+        }
+        if(ed >= 0)
+        {
+            memmove(code[cp].line, code[cp].line + bg, ed + 1);
+            code[cp].line[ed + 1] = '\0';
+        }
+        else
+        {
+            code[cp].line[0] = '\0';
+        }
+        code[cp].ln = cp + 1;
+        if(!stricmp(code[cp].line, "RUN" ,3))
+            break;
+        cp++;
+    }
+    code_size = cp;
+    cp = 0;
+    return;
+}
+
 int 
 main(int argc, char *argv[])
 {
@@ -1261,11 +1359,18 @@ main(int argc, char *argv[])
 		exec_endfor,
 		exec_if,
 		exec_else,
-		exec_endif
+		exec_endif,
+        exec_list,
+        exec_goto
 	};
 	if(argc < 2)
-		printf(1, "usage: basic_script_file/n");
-	load_program(argv[1]);
+    {
+        //printf(1, "usage: basic_script_file/n");
+        printf(1,"Please input your code,input \"RUN\" to start the program:\n");
+        readCodeFromShell();
+    }
+	else	
+	    load_program(argv[1]);
     for(cp = 0; cp < code_size; cp++)
     {
         (*key_func[yacc(code[cp].line)])(code[cp].line);
