@@ -196,6 +196,7 @@ char* _strcat(char*, char*);
 int stricmp(char*, char*, int);
 int readline(int, char*);
 void load_program(char*);
+void readCodeFromShell();
 
 PTLIST 
 stack_ini()
@@ -1090,6 +1091,11 @@ exec_let(STRING line)
     }
 }
 
+/*
+*函数功能：实现LIST命令，输出前面的代码
+*作者：赵哲晖
+*时间：2018/05/20
+*/
 void exec_list(STRING line)
 {
     for(int i = 0; i < cp; i++)
@@ -1269,6 +1275,43 @@ load_program(STRING filename)
     cp = 0;
 }
 
+/*
+*函数功能：从shell读入代码
+*作者：赵哲晖
+*时间：2018/05/20
+*/
+void readCodeFromShell()
+{
+    cp = 0;
+    while(1)
+    {
+        gets(code[cp].line,128);
+        int bg,ed;
+        for(bg = 0; !isalpha(code[cp].line[bg]) && !isdigit(code[cp].line[bg]); bg++) ;
+        ed = (int)strlen(code[cp].line + bg) - 1;
+        while(ed >= 0 && isspace(code[cp].line[bg + ed]))
+        {
+            ed--;
+        }
+        if(ed >= 0)
+        {
+            memmove(code[cp].line, code[cp].line + bg, ed + 1);
+            code[cp].line[ed + 1] = '\0';
+        }
+        else
+        {
+            code[cp].line[0] = '\0';
+        }
+        code[cp].ln = cp + 1;
+        if(!stricmp(code[cp].line, "RUN" ,3))
+            break;
+        cp++;
+    }
+    code_size = cp;
+    cp = 0;
+    return;
+}
+
 int 
 main(int argc, char *argv[])
 {
@@ -1286,8 +1329,13 @@ main(int argc, char *argv[])
         exec_list
 	};
 	if(argc < 2)
-		printf(1, "usage: basic_script_file/n");
-	load_program(argv[1]);
+    {
+        //printf(1, "usage: basic_script_file/n");
+        printf(1,"Please input your code,input \"RUN\" to start the program:\n");
+        readCodeFromShell();
+    }
+	else	
+	    load_program(argv[1]);
     for(cp = 0; cp < code_size; cp++)
     {
         (*key_func[yacc(code[cp].line)])(code[cp].line);
