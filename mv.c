@@ -61,7 +61,7 @@ int main(int argc,char* argv[]){
 		exit();
 	}
 	while((length = read(fp_src,buf,bufSize)) > 0){
-		write(fp_dst,buf,bufSize);
+		write(fp_dst,buf,length);//此处进行修正，将bufSize改正为length
 	}
 
 	close(fp_dst);
