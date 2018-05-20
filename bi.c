@@ -136,7 +136,8 @@ typedef enum
     key_if,            
     key_else,       
     key_endif,   
-    key_list    
+    key_list,
+    key_goto    
 }keywords;
 
 struct 
@@ -184,6 +185,7 @@ void exec_endif(STRING);
 void exec_let(STRING);
 void exec_null(STRING);
 void exec_list(STRING);
+void exec_goto(STRING);
 
 // load
 int isspace(char);
@@ -781,6 +783,10 @@ yacc(STRING line)
     {
         return key_list;
     }
+    else if(!stricmp(line, "GOTO ", 5))
+    {
+        return key_goto;
+    }
     else if(*line == '\0')
     {
         return key_null;
@@ -1103,6 +1109,34 @@ void exec_list(STRING line)
     return;
 }
 
+/*
+*函数功能：实现GOTO命令
+*作者：赵哲晖
+*时间：2018/05/20
+*/
+void exec_goto(STRING line)
+{
+    char * s = line;
+    s += 4;
+    while(*s && isspace(*s)) s++;
+    if(!isdigit(*s))
+    {
+        printf(1, "grammar error:goto\n");
+        exit();
+    }
+    int gotoln = atoi(s);
+    if(gotoln > code_size)
+    {
+        printf(1, "line number out of range\n");
+        exit();
+    }
+    else
+    {
+        cp = gotoln - 2;
+    }
+    return;
+}
+
 void
 exec_null(STRING line)
 {  
@@ -1326,7 +1360,8 @@ main(int argc, char *argv[])
 		exec_if,
 		exec_else,
 		exec_endif,
-        exec_list
+        exec_list,
+        exec_goto
 	};
 	if(argc < 2)
     {
