@@ -135,7 +135,8 @@ typedef enum
     key_endfor,        
     key_if,            
     key_else,       
-    key_endif       
+    key_endif,   
+    key_list    
 }keywords;
 
 struct 
@@ -182,6 +183,7 @@ void exec_else(STRING);
 void exec_endif(STRING);
 void exec_let(STRING);
 void exec_null(STRING);
+void exec_list(STRING);
 
 // load
 int isspace(char);
@@ -410,7 +412,6 @@ next_token()
         }
         e++;
     }
-    
     return token;
 }
 
@@ -775,6 +776,10 @@ yacc(STRING line)
     {
         return key_let;
     }
+    else if(!stricmp(line, "LIST", 4))
+    {
+        return key_list;
+    }
     else if(*line == '\0')
     {
         return key_null;
@@ -1085,6 +1090,13 @@ exec_let(STRING line)
     }
 }
 
+void exec_list(STRING line)
+{
+    for(int i = 0; i < cp; i++)
+        printf(1,"%s\n",code[i].line);
+    return;
+}
+
 void
 exec_null(STRING line)
 {  
@@ -1270,7 +1282,8 @@ main(int argc, char *argv[])
 		exec_endfor,
 		exec_if,
 		exec_else,
-		exec_endif
+		exec_endif,
+        exec_list
 	};
 	if(argc < 2)
 		printf(1, "usage: basic_script_file/n");
