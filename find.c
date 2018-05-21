@@ -11,6 +11,18 @@
 #include "fs.h"
 #include "date.h"
 
+typedef enum
+{
+	type_error,
+	type_name,
+	type_iname,
+	type_size,
+	type_empty,
+	type_cmin,
+	type_ctime
+} 	
+find_type;    //查询命令类型
+
 char* getFnameFromPath(char* path,char* fname)
 {
 	int i,j;
@@ -42,9 +54,32 @@ char* getFnameFromPath(char* path,char* fname)
 	fname[Len] = 0;
 	return fname;
 }
+
+int match(char * name, char * fname)
+{
+	int dm[15][15];
+	int m = strlen(name);
+	int n = strlen(fname);
+	dm[0][0] = 1;
+	for(int i = 1; fname[i-1] == '*'; i++)
+		dm[i][0] = 1;
+	for(int i = 1; i <= n; i++)
+	{
+		for(int j = 1; j <= m; j++)
+		{
+			if(fname[i-1] == '?')
+				dm[i][j] = dm[i-1][j-1];
+			else if(fname[i-1] == '*')
+			{
+				dm[i][j] = (dm[i-1][j] || dm[i-1][j-1] || dm[i][j-1]);
+			}	
+			else
+				dm[i][j] = (dm[i-1][j-1] && (fname[i-1] == name[j-1]));
+		}
+	}
+	return dm[n][m];
+}
 	
-
-
 int compare(char *c1,char* c2)
 {
 	int len1, len2;
@@ -57,7 +92,7 @@ int compare(char *c1,char* c2)
 	int i;
 	for(i = 0; i < len1; i++)
 	{
-		if(c1[i] != c2[i])
+		if(c1[i] != c2[i] && c2[i] != '?')
 		{
 			return -1;
 		}
@@ -151,7 +186,7 @@ rtcdate* timestampToDate(uint stamp)
   //get years
   while(1)
   {
-    if(years != 0 && years % 4 == 0)
+    if(years % 4 == 0)
     {
       if(stamp >= YEAR_SEC + DAY_SEC)
       {
@@ -220,19 +255,18 @@ rtcdate* timestampToDate(uint stamp)
   return date;
 }
 
-void sf(char *path, char *fname)
+
+void find_name(char *path, char *fname)
 {
 	char buf[512], *p;
 	int fd;
 	struct dirent de;
 	struct stat st;
-
 	if((fd = open(path, 0)) < 0)
 	{
 		printf(2, "ls: cannot open %s\n", path);
 		return;
 	}
-
 	if(fstat(fd, &st) < 0){
 		printf(2, "ls: cannot stat %s\n", path);
 		close(fd);
@@ -242,19 +276,12 @@ void sf(char *path, char *fname)
 	{
 	case T_FILE:
 		{
-			char name[100];
-			if(compare(getFnameFromPath(path,name),fname) == 0)
+			char name[DIRSIZ+1];
+			if(match(getFnameFromPath(path,name),fname) != 0)
 			{
 				rtcdate * date = timestampToDate(st.ctime);
-				printf(1, "%s path:%s  size:%d  time: %d/%d/%d %d:%d:%d  %d\n", fname, path,st.size,date->year,date->month,date->day,date->hour,date->minute,date->second,st.ctime);
+				printf(1, "%s path:%s%s  size:%d  time: %d/%d/%d %d:%d:%d\n", name, path, name, st.size,date->year,date->month,date->day,date->hour,date->minute,date->second);
 				free(date);
-			}
-			//printf(1,"%s %d %d", getFnameFromPath(path,name), compare(getFnameFromPath(path,name),"."), compare(getFnameFromPath(path,name),".."));
-			//printf(0,"1/n");
-			if((st.type == 1) && (compare(getFnameFromPath(buf,name),".") != 0) && (compare(getFnameFromPath(buf,name),"..") != 0))
-			{
-				sf(getFnameFromPath(path,name), fname);
-
 			}
 			break;
 		}
@@ -268,8 +295,10 @@ void sf(char *path, char *fname)
 		}
 		strcpy(buf, path);
 		p = buf+strlen(buf);
-		*p++ = '/';
-		while(read(fd, &de, sizeof(de)) == sizeof(de)){
+		if(*(p-1) == '.')
+			*p++ = '/';
+		while(read(fd, &de, sizeof(de)) == sizeof(de))
+		{
 			if(de.inum == 0)
 				continue;
 			memmove(p, de.name, DIRSIZ);
@@ -278,19 +307,23 @@ void sf(char *path, char *fname)
 				printf(1, "ls: cannot stat %s\n", buf);
 				continue;
 			}
-			char name[100];
-			if(compare(getFnameFromPath(buf,name),fname) == 0)
+			char name[DIRSIZ+1];
+			if(match(getFnameFromPath(buf,name),fname) != 0)
 			{
 				rtcdate * date = timestampToDate(st.ctime);
-				printf(1, "%s path:%s  size:%d  time: %d/%d/%d %d:%d:%d  %d\n", fname, path,st.size,date->year,date->month,date->day,date->hour,date->minute,date->second,st.ctime);
+				printf(1, "%s path:%s%s  size:%d  time: %d/%d/%d %d:%d:%d\n", name, path, name, st.size,date->year,date->month,date->day,date->hour,date->minute,date->second);
 				free(date);
 			}
-			if((st.type == 1) && (compare(getFnameFromPath(buf,name),".") != 0) && (compare(getFnameFromPath(buf,name),"..") != 0))
+			getFnameFromPath(buf,name);
+			if((st.type == 1) && (compare(name,".") != 0) && (compare(name,"..") != 0) )
 			{
 				//printf(1,"%s %d %d", getFnameFromPath(buf,name), compare(getFnameFromPath(buf,name),"."), compare(getFnameFromPath(buf,name),".."));
 				//printf(0,"2");
-				sf(getFnameFromPath(buf,name), fname);
-
+				char bufnext[512];
+				strcpy(bufnext,buf);
+				char * q = bufnext + strlen(bufnext);
+				*q = '/';
+				find_name(bufnext, fname);
 			}
 		}
 		break;
@@ -298,20 +331,71 @@ void sf(char *path, char *fname)
 	close(fd);
 }
 
+/*
+*函数功能：返回查询命令类型
+*作者：赵哲晖
+*时间：2018/05/21
+*/
+int getFindType(char * type)
+{
+	if(!strcmp(type,"-name"))
+		return type_name;
+	else if(!strcmp(type,"-iname"))
+		return type_iname;
+	else if(!strcmp(type,"-size"))
+		return type_size;
+	else if(!strcmp(type,"-empty"))
+		return type_iname;
+	else if(!strcmp(type,"-cmin"))
+		return type_cmin;
+	else if(!strcmp(type,"-ctime"))
+		return type_ctime;
+	else
+		return type_error;
+
+}
 
 int main(int argc, char *argv[])
-
-
 {
-	if(argc < 2)
+	if(argc < 3)
 	{
-		printf(1, "please input the filename you want to find...\n");
+		//printf(1, "please input the filename you want to find...\n");
+		printf(1, "Error: too few arguments\n");
+		exit();
+	}
+	if(open(argv[1], 0) < 0)
+	{
+		printf(2, "Error: cannot open directory %s\n", argv[1]);
 		exit();
 	}
 	/*int i;
 	for(i=1; i<argc; i++)
 	ls(argv[i]);*/
-	sf(".",argv[1]);
+	int type = getFindType(argv[2]);
+	if(!type)
+	{
+		printf(1, "Error: expression error\n");
+		exit();
+	}
+	switch(type)
+	{
+	case type_name:
+		if(argc < 4)
+		{
+			printf(1, "Error: too few arguments\n");
+			exit();
+		}
+		if(strlen(argv[3]) > 14)
+		{
+			printf(1, "Error: filename too long\n");
+			exit();
+		}
+		find_name(argv[1],argv[3]);
+		break;
+	default:
+		printf(1, "Not finished yet\n");
+		break;
+	}
 	exit();
 }
 
