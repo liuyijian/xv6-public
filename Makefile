@@ -187,6 +187,9 @@ UPROGS=\
 	_tail\
 	_splice\
 	_history\
+	_shutdown\
+	_login\
+	_more\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -257,7 +260,7 @@ EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c mv.c touch.c cp.c head.c tail.c splice.c\
-	history.c\
+	history.c shutdown.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
