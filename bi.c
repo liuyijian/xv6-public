@@ -1083,17 +1083,17 @@ exec_while(STRING line)
         exit();
     }
     stack_while[top].sign = sign;
-    printf(2,"%d",stack_while[top].sign);//debug
+    //printf(2,"%d",stack_while[top].sign);//debug
     // get the right value
     while(*s && isspace(*s)) s++;
     //how to grab the maining of the right thing
     stack_while[top].target = eval(s).i;
-    printf(2,"%d",stack_while[top].target);//debug
-    if((sign == 0 && memory[stack_while[top].id].i == stack_while[top].target)||
-       (sign == 1 && memory[stack_while[top].id].i > stack_while[top].target)||
-       (sign == 2 && memory[stack_while[top].id].i < stack_while[top].target)||
-       (sign == 3 && memory[stack_while[top].id].i >= stack_while[top].target)||
-       (sign == 4 && memory[stack_while[top].id].i <= stack_while[top].target))
+   // printf(2,"%d",stack_while[top].target);//debug
+    if((sign == 0 && memory[stack_while[top].id].i != stack_while[top].target)||
+       (sign == 1 && memory[stack_while[top].id].i <= stack_while[top].target)||
+       (sign == 2 && memory[stack_while[top].id].i >= stack_while[top].target)||
+       (sign == 3 && memory[stack_while[top].id].i < stack_while[top].target)||
+       (sign == 4 && memory[stack_while[top].id].i > stack_while[top].target))
     {
         while(yacc(code[cp].line) != key_wend)
         {
