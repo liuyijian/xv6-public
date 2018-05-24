@@ -139,7 +139,9 @@ typedef enum
     key_list,
     key_goto,
     key_while,// 5.22 new
-    key_wend //5.22 new   
+    key_wend, //5.22 new  
+    key_do, 
+    key_loop
 }keywords;
 
 struct 
@@ -159,6 +161,15 @@ struct
     int sign;
 }stack_while[MEMORY_SIZE];
 int top_while = -1;
+
+struct
+{
+	int id;
+	int ln;
+	int target;
+	int sign;
+}stack_do[MEMORY_SIZE];
+int top_do = -1;
 
 // load
 #define PROGRAM_SIZE 1000  
@@ -199,6 +210,8 @@ void exec_list(STRING);
 void exec_goto(STRING);
 void exec_while(STRING);//5.22 new
 void exec_wend(STRING);//5.22 new
+void exec_do(STRING);
+void exec_loop(STRING);
 
 // load
 int isspace(char);
@@ -808,6 +821,14 @@ yacc(STRING line)
     {
         return key_wend;
     }
+    else if(!stricmp(line, "DO", 2))
+    {
+    	return key_do;
+    }
+    else if(!stricmp(line, "LOOP ", 5))
+    {
+    	return key_loop;
+    }
     else if(*line == '\0')
     {
         return key_null;
@@ -1083,12 +1104,12 @@ exec_while(STRING line)
         exit();
     }
     stack_while[top].sign = sign;
-    //printf(2,"%d",stack_while[top].sign);//debug
+    printf(2,"%d",stack_while[top].sign);//debug
     // get the right value
     while(*s && isspace(*s)) s++;
     //how to grab the maining of the right thing
     stack_while[top].target = eval(s).i;
-   // printf(2,"%d",stack_while[top].target);//debug
+    printf(2,"%d",stack_while[top].target);//debug
     if((sign == 0 && memory[stack_while[top].id].i != stack_while[top].target)||
        (sign == 1 && memory[stack_while[top].id].i <= stack_while[top].target)||
        (sign == 2 && memory[stack_while[top].id].i >= stack_while[top].target)||
@@ -1135,6 +1156,94 @@ exec_wend(STRING line)
         cp = stack_while[top_while].ln;
     }
 }
+
+void
+exec_do(STRING line)
+{
+	if(strcmp(line,"DO"))
+	{
+		printf(1,"grammar error:do\n");
+		exit();
+	}
+	int top;
+	top = top_do + 1;
+	if(top >= MEMORY_SIZE)
+	{
+		printf(1,"error:do\n");
+		exit();
+	}
+	stack_do[top].ln = cp;
+	top_do++;
+}
+
+void
+exec_loop(STRING line)
+{
+	STRING s1;
+	char* s;
+	int sign;
+
+	strcpy(s1, line);
+	s = s1;
+	s += 11;
+	while(*s && isspace(*s)) s++;
+	if(isalpha(*s) && !isalnum(s[1]))
+	{
+		stack_do[top_do].id = toupper(*s) - 'A';
+		s++;
+	}
+	else
+	{
+		printf(1,"grammar error:loop while a\n");
+		exit();
+	}
+	while(*s && isspace(*s)) s++;
+	switch(*s)
+	{
+		case '=' : sign = -1; s++;break;
+		case '>' : sign = 1; s++; break;
+		case '<' : sign = 2; s++; break;
+		default : printf(1,"grammar error:loop while d\n");exit();break;		
+	}
+	if(*s == '=')
+	{
+		if(sign == -1) sign = 0;
+		if(sign == 1) sign = 3;
+		if(sign == 2) sign = 4;
+		s++;
+	}
+	else if(*s == ' ')
+	{
+		;
+	}
+	else
+	{
+		printf(1,"grammar error:loop while b\n");
+		exit();
+	}
+	if(sign < 0)
+	{
+		printf(1,"grammar error:loop while c\n");
+		exit();
+	}
+	stack_do[top_do].sign = sign;
+	while(*s && isspace(*s)) s++;
+	stack_do[top_do].target = eval(s).i;
+	if((sign == 0 && memory[stack_do[top_do].id].i != stack_do[top_do].target)||
+		(sign == 1 && memory[stack_do[top_do].id].i <= stack_do[top_do].target)||
+		(sign == 2 && memory[stack_do[top_do].id].i >= stack_do[top_do].target)||
+		(sign == 3 && memory[stack_do[top_do].id].i < stack_do[top_do].target)||
+		(sign == 4 && memory[stack_do[top_do].id].i > stack_do[top_do].target))
+	{
+		top_do--;
+		return;
+	}
+	else
+	{
+		cp = stack_do[top_do].ln;
+	}
+}
+
 void 
 exec_if(STRING line)
 {
@@ -1499,7 +1608,9 @@ main(int argc, char *argv[])
         exec_list,
         exec_goto,
         exec_while,
-        exec_wend
+        exec_wend,
+        exec_do,
+        exec_loop
 	};
 	if(argc < 2)
     {
