@@ -14,7 +14,6 @@
 #define PIPE  3
 #define LIST  4
 #define BACK  5
-
 #define MAXARGS 10
 
 struct cmd {
@@ -59,7 +58,7 @@ void initHistory(struct history* hs);
 void addHistory(struct history* hs,char* cmd);
 void getHistory(struct history* hs);
 void setHistory(char* cmd);
-
+void compare_similar(char* cmd);
 
 int fork1(void);  // Fork but panics on failure.
 void panic(char*);
@@ -75,7 +74,7 @@ runcmd(struct cmd *cmd)
   struct listcmd *lcmd;
   struct pipecmd *pcmd;
   struct redircmd *rcmd;
-
+  int i;
   if(cmd == 0)
     exit();
 
@@ -87,6 +86,15 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit();
+    for (i = 0; ecmd->argv[0][i]; i++);
+	char *newcommand=malloc((i+1)*sizeof(char));
+	newcommand[0]='/';
+	for(i=0;ecmd->argv[0][i]; i++)
+	{
+		newcommand[i+1]=ecmd->argv[0][i];
+	}
+	exec(newcommand, ecmd->argv);
+
     exec(ecmd->argv[0], ecmd->argv);
     printf(2, "exec %s failed\n", ecmd->argv[0]);
     break;
@@ -624,4 +632,9 @@ void setHistory(char* cmd){
     write(fp, cmd, strlen(cmd));
     write(fp, "\n", 1);
     close(fp);
+}
+
+void
+compare_similar(char* cmd){
+
 }
